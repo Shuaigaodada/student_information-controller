@@ -1,6 +1,7 @@
 import unicurses as _curses
 import typing
 import atexit
+import locale
 
 STATE = int
 OK = 0
@@ -44,13 +45,41 @@ class Window:
     @property
     def size(self: typing.Self) -> typing.Tuple[int, int]:
         height, width = _curses.getmaxyx(self.id)
-        return height, width
+        return width, height
+    
+    def create_box(
+        self: typing.Self,
+        left: str, 
+        right: str, 
+        top: str, 
+        bottom: str, 
+        left_top: str, 
+        right_top: str, 
+        left_bottom: str, 
+        right_bottom: str
+        ) -> STATE:
+        if all(len(char) == 1 for char in [left, right, top, bottom, left_top, right_top, left_bottom, right_bottom]):
+            _curses.border(
+                ord(left), 
+                ord(right), 
+                ord(top), 
+                ord(bottom), 
+                ord(left_top), 
+                ord(right_top), 
+                ord(left_bottom), 
+                ord(right_bottom)
+            )
+            return OK
+        else:
+            return ERR
+
 
 
 class Screen:
     main: Window
     @staticmethod
     def init() -> STATE:
+        locale.setlocale(locale.LC_ALL, "")
         Screen.main = Window(_curses.initscr())
         _curses.cbreak()
         _curses.noecho()
@@ -69,6 +98,9 @@ class Screen:
     
     def size() -> typing.Tuple[int, int]:
         return Screen.main.size
+    
+    def new_window(width: int = 0, height: int = 0, begin_x: int = 0, begin_y: int = 0) -> Window:
+        return Window(_curses.newwin(height, width, begin_x, begin_y))
 
         
 
